@@ -1,0 +1,186 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb_checkpoints/
+profile_default/
+ipython_config.py
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Data files (large files - don't commit to git)
+*.edf
+*.fif
+*.set
+*.npy
+*.npz
+*.h5
+*.hdf5
+*.pkl
+*.pickle
+*.joblib
+
+# Processed data directories (exclude from git)
+data/raw/*
+data/processed/*
+data/features/*
+data/splits/*
+data/splits/*
+
+# Keep directory structure with .gitkeep
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!data/features/.gitkeep
+!data/splits/.gitkeep
+
+# Model files (large)
+*.pt
+*.pth
+*.h5
+*.hdf5
+*.pb
+*.onnx
+*.tflite
+
+# Model checkpoints and saved models
+results/models/checkpoints/*
+results/models/final/*
+!results/models/checkpoints/.gitkeep
+!results/models/final/.gitkeep
+
+# Logs
+results/logs/*
+*.log
+!results/logs/.gitkeep
+
+# MLflow
+mlruns/
+.mlflow/
+
+# Weights & Biases
+wandb/
+
+# TensorBoard
+logs/
+tensorboard/
+runs/
+
+# Experiment tracking
+.neptune/
+lightning_logs/
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+tmp/
+temp/
+.cache/
+
+# Paper compilation (LaTeX)
+paper/manuscript/*.aux
+paper/manuscript/*.bbl
+paper/manuscript/*.blg
+paper/manuscript/*.log
+paper/manuscript/*.out
+paper/manuscript/*.toc
+paper/manuscript/*.lof
+paper/manuscript/*.lot
+paper/manuscript/*.fls
+paper/manuscript/*.fdb_latexmk
+paper/manuscript/*.synctex.gz
+paper/manuscript/*.nav
+paper/manuscript/*.snm
+paper/manuscript/*.vrb
+
+# Keep only source tex files
+!paper/manuscript/*.tex
+!paper/manuscript/*.bib
+
+# Compiled output
+*.pdf
+!paper/figures/*.pdf
+
+# Coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.pytest_cache/
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# Profiling
+*.prof
+
+# Documentation
+docs/_build/
+site/
+
+# System files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Compressed files (if accidentally added)
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# Large result files
+results/figures/*.png
+results/figures/*.jpg
+results/figures/*.svg
+results/tables/*.csv
+results/tables/*.xlsx
+
+# Keep example/template figures
+!results/figures/example.png
