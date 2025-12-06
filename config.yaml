@@ -1,0 +1,546 @@
+# ============================================
+# EEG MDD Detection Project Configuration
+# ============================================
+
+project:
+  name: "EEG MDD Detection"
+  version: "1.0.0"
+  description: "EEG Signal Analysis for Major Depressive Disorder Detection"
+  authors:
+    - "Your Name"
+  institution: "Your University"
+  course: "EAS MK Pengolahan Citra dan Suara - S1 Sains Data"
+  created: "2025-12-05"
+  target_venue: "IEEE Conference"
+
+# Dataset Configuration
+data:
+  dataset_path: "dataset/"
+  raw_data_path: "data/raw/"
+  processed_data_path: "data/processed/"
+  features_path: "data/features/"
+  splits_path: "data/splits/"
+
+  # Dataset specifications
+  sampling_rate: 256 # Hz
+  channel: "T4"
+  n_healthy: 28
+  n_mdd: 30
+  total_subjects: 58
+  duration_range: [150, 376] # seconds
+  condition: "Eyes Closed (EC)"
+
+  # File naming patterns
+  healthy_pattern: "H S*.edf"
+  mdd_pattern: "MDD S*.edf"
+
+# Preprocessing Configuration
+preprocessing:
+  # Filtering parameters
+  bandpass:
+    enabled: true
+    low_freq: 0.5 # Hz
+    high_freq: 45.0 # Hz
+    filter_order: 5
+    filter_type: "butterworth"
+
+  notch:
+    enabled: true
+    freq: 50.0 # Hz (50 for Europe, 60 for US)
+    quality_factor: 30
+
+  # Artifact removal
+  artifacts:
+    threshold_method:
+      enabled: true
+      amplitude_threshold: 100 # μV
+      gradient_threshold: 75 # μV/sample
+
+    ica_method:
+      enabled: false # Set true if you want ICA
+      n_components: 20
+      method: "fastica"
+      random_state: 42
+
+  # Resampling (if needed)
+  resampling:
+    enabled: false
+    target_rate: 256 # Hz
+
+  # Normalization
+  normalization:
+    method: "zscore" # Options: zscore, minmax, robust
+    per_subject: true
+
+# Segmentation Configuration
+segmentation:
+  window_size: 2.0 # seconds
+  overlap: 0.5 # 50% overlap (1.0 second)
+  min_segment_length: 1.0 # seconds
+  discard_short: true # Discard segments shorter than min_length
+
+# Feature Extraction Configuration
+features:
+  # Feature domains to extract
+  time_domain:
+    enabled: true
+    features:
+      - "mean"
+      - "variance"
+      - "std"
+      - "skewness"
+      - "kurtosis"
+      - "rms"
+      - "peak_to_peak"
+      - "zero_crossing_rate"
+      - "hjorth_activity"
+      - "hjorth_mobility"
+      - "hjorth_complexity"
+
+  frequency_domain:
+    enabled: true
+    method: "welch" # Options: welch, periodogram, multitaper
+    nperseg: 256 # Window length for Welch
+    noverlap: 128 # Overlap for Welch
+
+    # Frequency bands
+    bands:
+      delta: [0.5, 4]
+      theta: [4, 8]
+      alpha: [8, 13]
+      beta: [13, 30]
+      gamma: [30, 45]
+
+    features:
+      - "band_power_absolute"
+      - "band_power_relative"
+      - "band_power_ratios" # alpha/beta, theta/alpha, etc.
+      - "spectral_entropy"
+      - "peak_frequency"
+      - "spectral_edge_frequency"
+      - "spectral_centroid"
+
+  time_frequency:
+    enabled: true
+
+    # Wavelet transform
+    wavelet:
+      enabled: true
+      wavelet_name: "db4" # Daubechies 4
+      decomposition_level: 5
+      features:
+        - "wavelet_energy"
+        - "wavelet_entropy"
+        - "wavelet_coefficients_stats"
+
+    # Short-Time Fourier Transform
+    stft:
+      enabled: false
+      nperseg: 256
+      noverlap: 128
+
+  nonlinear:
+    enabled: true
+    features:
+      - "sample_entropy" # SampEn
+      - "approximate_entropy" # ApEn
+      - "hurst_exponent"
+      - "dfa" # Detrended Fluctuation Analysis
+      - "higuchi_fd" # Higuchi Fractal Dimension
+      - "petrosian_fd" # Petrosian Fractal Dimension
+
+    # Parameters for entropy calculations
+    entropy_params:
+      emb_dim: 2 # Embedding dimension
+      tolerance: 0.2 # Tolerance (fraction of std)
+
+# Feature Selection Configuration
+feature_selection:
+  # Statistical methods
+  statistical:
+    enabled: true
+    methods:
+      - "anova_f"
+      - "mutual_info"
+      - "chi2"
+    top_k: 50 # Select top K features
+
+  # Model-based methods
+  model_based:
+    enabled: true
+    methods:
+      - "random_forest_importance"
+      - "xgboost_importance"
+      - "lasso_l1"
+
+  # Dimensionality reduction
+  dim_reduction:
+    pca:
+      enabled: true
+      n_components: 0.95 # Explain 95% variance
+    lda:
+      enabled: true
+      n_components: 1 # Binary classification
+
+# Model Configuration
+model:
+  random_state: 42
+
+  # Train/Val/Test split
+  data_split:
+    test_size: 0.15
+    val_size: 0.15
+    train_size: 0.70
+    stratify: true
+    shuffle: true
+
+  # Cross-validation
+  cross_validation:
+    method: "stratified_kfold" # Options: stratified_kfold, kfold, leave_one_subject_out
+    n_folds: 10
+    shuffle: true
+
+  # Class imbalance handling
+  imbalance:
+    method: "none" # Options: none, smote, adasyn, random_oversample, random_undersample
+    sampling_strategy: "auto"
+
+# Classical ML Models Configuration
+classical_ml:
+  # Logistic Regression
+  logistic_regression:
+    enabled: true
+    C: [0.001, 0.01, 0.1, 1, 10, 100]
+    penalty: ["l1", "l2"]
+    solver: "saga"
+    max_iter: 1000
+
+  # Support Vector Machine
+  svm:
+    enabled: true
+    C: [0.1, 1, 10, 100]
+    kernel: ["linear", "rbf", "poly"]
+    gamma: ["scale", "auto", 0.001, 0.01, 0.1]
+    degree: [2, 3, 4] # For poly kernel
+
+  # k-Nearest Neighbors
+  knn:
+    enabled: true
+    n_neighbors: [3, 5, 7, 9, 11]
+    weights: ["uniform", "distance"]
+    metric: ["euclidean", "manhattan", "minkowski"]
+
+  # Naive Bayes
+  naive_bayes:
+    enabled: true
+    var_smoothing: [1e-9, 1e-8, 1e-7]
+
+  # Decision Tree
+  decision_tree:
+    enabled: true
+    max_depth: [5, 10, 15, 20, null]
+    min_samples_split: [2, 5, 10]
+    min_samples_leaf: [1, 2, 4]
+
+  # Random Forest
+  random_forest:
+    enabled: true
+    n_estimators: [100, 200, 500]
+    max_depth: [10, 20, 30, null]
+    min_samples_split: [2, 5, 10]
+    min_samples_leaf: [1, 2, 4]
+    max_features: ["sqrt", "log2"]
+
+  # XGBoost
+  xgboost:
+    enabled: true
+    n_estimators: [100, 200, 500]
+    max_depth: [3, 5, 7, 9]
+    learning_rate: [0.01, 0.05, 0.1, 0.2]
+    subsample: [0.8, 0.9, 1.0]
+    colsample_bytree: [0.8, 0.9, 1.0]
+
+  # LightGBM
+  lightgbm:
+    enabled: true
+    n_estimators: [100, 200, 500]
+    max_depth: [3, 5, 7, 9]
+    learning_rate: [0.01, 0.05, 0.1, 0.2]
+    num_leaves: [31, 50, 100]
+
+  # Hyperparameter tuning
+  hyperparameter_tuning:
+    method: "optuna" # Options: grid_search, random_search, optuna
+    n_trials: 100 # For optuna
+    cv_folds: 5
+    n_jobs: -1 # Use all CPU cores
+
+# Deep Learning Configuration
+deep_learning:
+  # General training parameters
+  training:
+    batch_size: 32
+    epochs: 100
+    validation_split: 0.15
+
+    # Callbacks
+    early_stopping:
+      enabled: true
+      monitor: "val_loss"
+      patience: 15
+      restore_best_weights: true
+
+    reduce_lr:
+      enabled: true
+      monitor: "val_loss"
+      factor: 0.5
+      patience: 5
+      min_lr: 1e-7
+
+    model_checkpoint:
+      enabled: true
+      monitor: "val_accuracy"
+      save_best_only: true
+
+  # Optimizer
+  optimizer:
+    name: "adam" # Options: adam, sgd, rmsprop, adamw
+    learning_rate: 0.001
+    beta_1: 0.9
+    beta_2: 0.999
+    epsilon: 1e-7
+
+  # Loss function
+  loss: "binary_crossentropy"
+
+  # Metrics
+  metrics:
+    - "accuracy"
+    - "precision"
+    - "recall"
+    - "auc"
+
+  # 1D CNN Architecture
+  cnn_1d:
+    enabled: true
+    architecture:
+      conv_layers:
+        - filters: 64
+          kernel_size: 7
+          activation: "relu"
+          batch_norm: true
+          dropout: 0.3
+        - filters: 128
+          kernel_size: 5
+          activation: "relu"
+          batch_norm: true
+          dropout: 0.3
+        - filters: 256
+          kernel_size: 3
+          activation: "relu"
+          batch_norm: true
+          dropout: 0.4
+
+      pooling: "max" # Options: max, average, global_average
+
+      dense_layers:
+        - units: 128
+          activation: "relu"
+          dropout: 0.5
+        - units: 64
+          activation: "relu"
+          dropout: 0.5
+
+      output_activation: "sigmoid"
+
+  # LSTM Architecture
+  lstm:
+    enabled: true
+    architecture:
+      bidirectional: true
+      lstm_layers:
+        - units: 128
+          return_sequences: true
+          dropout: 0.3
+          recurrent_dropout: 0.3
+        - units: 64
+          return_sequences: false
+          dropout: 0.3
+          recurrent_dropout: 0.3
+
+      dense_layers:
+        - units: 64
+          activation: "relu"
+          dropout: 0.5
+
+      output_activation: "sigmoid"
+
+  # GRU Architecture
+  gru:
+    enabled: true
+    architecture:
+      bidirectional: true
+      gru_layers:
+        - units: 128
+          return_sequences: true
+          dropout: 0.3
+          recurrent_dropout: 0.3
+        - units: 64
+          return_sequences: false
+          dropout: 0.3
+          recurrent_dropout: 0.3
+
+      dense_layers:
+        - units: 64
+          activation: "relu"
+          dropout: 0.5
+
+      output_activation: "sigmoid"
+
+  # Hybrid CNN-LSTM
+  cnn_lstm:
+    enabled: true
+    architecture:
+      # CNN part
+      conv_layers:
+        - filters: 64
+          kernel_size: 5
+          activation: "relu"
+          batch_norm: true
+        - filters: 128
+          kernel_size: 3
+          activation: "relu"
+          batch_norm: true
+
+      pooling: "max"
+
+      # LSTM part
+      lstm_layers:
+        - units: 64
+          return_sequences: false
+          dropout: 0.3
+
+      # Dense part
+      dense_layers:
+        - units: 64
+          activation: "relu"
+          dropout: 0.5
+
+      output_activation: "sigmoid"
+
+  # Attention Mechanism
+  attention:
+    enabled: true
+    attention_type: "self" # Options: self, multi_head
+    num_heads: 4 # For multi-head attention
+
+  # Data Augmentation
+  data_augmentation:
+    enabled: true
+    methods:
+      noise:
+        enabled: true
+        std: 0.01
+      time_shift:
+        enabled: true
+        max_shift: 0.1 # 10% of signal length
+      amplitude_scale:
+        enabled: true
+        scale_range: [0.9, 1.1]
+
+# Evaluation Configuration
+evaluation:
+  metrics:
+    - "accuracy"
+    - "precision"
+    - "recall"
+    - "f1_score"
+    - "specificity"
+    - "sensitivity"
+    - "auc_roc"
+    - "auc_pr"
+    - "confusion_matrix"
+    - "cohen_kappa"
+
+  # Statistical tests
+  statistical_tests:
+    - "paired_t_test"
+    - "mcnemar_test"
+    - "wilcoxon_test"
+
+  # Confidence intervals
+  confidence_interval: 0.95
+
+  # Bootstrap for CI
+  bootstrap:
+    enabled: true
+    n_iterations: 1000
+
+# Visualization Configuration
+visualization:
+  # Figure settings
+  figure_format: "png" # Options: png, pdf, svg
+  dpi: 300
+  figure_size: [10, 6]
+  style: "seaborn-v0_8-paper"
+
+  # Color schemes
+  colors:
+    healthy: "#2ecc71" # Green
+    mdd: "#e74c3c" # Red
+    primary: "#3498db" # Blue
+    secondary: "#9b59b6" # Purple
+
+  # Plot types
+  plots:
+    raw_signal: true
+    psd: true
+    spectrogram: true
+    wavelet_scalogram: true
+    feature_importance: true
+    correlation_matrix: true
+    tsne: true
+    umap: true
+    roc_curve: true
+    confusion_matrix: true
+    learning_curves: true
+
+# Results and Logging
+results:
+  base_path: "results/"
+  figures_path: "results/figures/"
+  tables_path: "results/tables/"
+  models_path: "results/models/"
+  logs_path: "results/logs/"
+
+  # Experiment tracking
+  tracking:
+    mlflow:
+      enabled: false
+      tracking_uri: "http://localhost:5000"
+      experiment_name: "eeg_mdd_detection"
+
+    wandb:
+      enabled: false
+      project: "eeg-mdd-detection"
+      entity: "your-username"
+
+    tensorboard:
+      enabled: true
+      log_dir: "results/logs/tensorboard/"
+
+# Reproducibility
+reproducibility:
+  seed: 42
+  deterministic: true
+
+# Performance
+performance:
+  n_jobs: -1 # Use all CPU cores
+  verbose: 1
+
+# Hardware (for reference)
+hardware:
+  device: "M1 Pro"
+  ram: "16GB"
+  use_gpu: true # Metal acceleration for TensorFlow
